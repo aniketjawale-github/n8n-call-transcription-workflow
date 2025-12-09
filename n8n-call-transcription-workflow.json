@@ -1,0 +1,635 @@
+{
+  "name": "n8n-call-transcription-workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1LbwzbhQCoAeP2mzigxyguucfrsUrC-G-",
+          "mode": "list",
+          "cachedResultName": "CallAnalyzer Test",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1LbwzbhQCoAeP2mzigxyguucfrsUrC-G-"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        16
+      ],
+      "id": "13b14320-e394-4dd2-8829-ef1dbd550f11",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "bgHY0TSfLemO1HTC",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        112,
+        16
+      ],
+      "id": "85d98654-6f61-4ab5-a3a7-37cb11a060e9",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "bgHY0TSfLemO1HTC",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=#Role\nAct as a multifaceted sales analysis expert, adept at evaluating sales call transcripts to extract actionable insights, analyze business opportunities, understand prospect profiles, evaluate salesperson performance, and assess potential deal outcomes.\n\n#Task\nAnalyze the provided transcript of a sales call and generate structured outputs that adhere to the following schema:\n\n1. Person\nDescribe the prospect’s role, interests, goals, and pain points based on explicit or inferred information.\n\n2. MOM (Minutes of Meeting)\nSummarize the meeting in a clear structure including:\n- Objective of the call\n- Key discussion points\n- Decisions taken (if any)\n- Action items (with owner if mentioned)\n- Next scheduled steps or timeline\n\n3. Red Flags\nIdentify discrepancies, risks, objections, or concerns in the prospect’s discourse, such as budget limitations, misalignment of goals, or hesitations.\n\n4. Potential Opportunities\nHighlight areas for collaboration, upselling, cross-selling, or addressing unmet needs.\n\n5. Qualification Score\nProvide a score (1-10) evaluating the prospect’s likelihood to convert based on readiness, interest, and alignment with the product/service.\n\n6. Deal Probability\nAssess the probability of closing this deal (low, medium, high) and provide a brief rationale.\n\n7. Risk Factors\nList the top factors that could negatively affect deal success.\n\n8. Buying Triggers\nIdentify statements that indicate urgency, need, motivation, or purchase intent.\n\n9. Salesperson Performance\nAssess the salesperson’s performance, noting strengths and areas for improvement in rapport building, discovery, objection handling, clarity, and closing attempts.\n\n10. Next Steps\nRecommend specific actionable next steps to move the deal forward, based on the conversation.\n\n11. Follow-Up Email\nDraft a concise, professional follow-up email summarizing the call and confirming next agreed steps.\n\n#Instructions\nUse bullet points where possible. Only include information supported by the transcript. If an item is missing, state “Not mentioned.”\n\nTranscript:\n{{ $json.text }}\n"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        672,
+        240
+      ],
+      "id": "d7e2a4f6-efc6-4708-9e5c-83aafc16304e",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        592,
+        448
+      ],
+      "id": "8fd5a07a-2666-4e6b-b388-5be2a639fdf4",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "w4LXGk50gn8jCWBx",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"person\": {\n    \"prospect_name\": \"\",\n    \"prospect_email\": \"\",\n    \"company_name\": \"\",\n    \"industry\": \"\",\n    \"role\": \"\",\n    \"goals\": [],\n    \"pain_points\": []\n  },\n  \"mom\": {\n    \"objective\": \"\",\n    \"key_points\": [],\n    \"decisions\": [],\n    \"action_items\": [\n      {\n        \"owner\": \"\",\n        \"task\": \"\",\n        \"due\": \"\"\n      }\n    ],\n    \"next_steps_meeting\": \"\"\n  },\n  \"red_flags\": [\n    {\n      \"flag\": \"\",\n      \"description\": \"\",\n      \"quoted_text\": \"\"\n    }\n  ],\n  \"potential_opportunities\": [\n    {\n      \"type\": \"\",\n      \"description\": \"\",\n      \"priority\": \"\"\n    }\n  ],\n  \"qualification_score\": {\n    \"score\": 0,\n    \"reason\": \"\"\n  },\n  \"deal_probability\": {\n    \"probability\": \"\",\n    \"rationale\": \"\"\n  },\n  \"risk_factors\": [\n    \"\"\n  ],\n  \"buying_triggers\": [\n    \"\"\n  ],\n  \"salesperson_performance\": {\n    \"strengths\": [],\n    \"weaknesses\": [],\n    \"summary\": \"\"\n  },\n  \"next_steps\": [\n    {\n      \"action\": \"\",\n      \"priority\": \"\"\n    }\n  ],\n  \"follow_up_email\": {\n    \"subject\": \"\",\n    \"body\": \"\"\n  }\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        928,
+        448
+      ],
+      "id": "55e0bcb0-8a7e-43ec-b01f-4be133e13f74",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1344,
+        112
+      ],
+      "id": "5f67b368-318a-478c-b473-f4b2cef53b06",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1VFF006WJTCR9uMKk6CiVD4XqlsSE-wjsQR5G7_4T9Eo/edit?usp=sharing",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1771689690,
+          "mode": "list",
+          "cachedResultName": "Call_Analysis",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VFF006WJTCR9uMKk6CiVD4XqlsSE-wjsQR5G7_4T9Eo/edit#gid=1771689690"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "person": "={{ $json[\"name and email\"] }}",
+            "mom_objective_of_call": "={{ $json.mom.objective }}",
+            "mom_decisions_taken": "={{ $json.mom.decisions }}",
+            "mom_action_items": "={{ $json.mom.action_items }}",
+            "mom_next_steps_timeline": "={{ $json.mom.next_steps_meeting }}",
+            "mom_key_discussion_points": "={{ $json.mom.key_points }}",
+            "qualification_score": "={{ $json.output.qualification_score }}",
+            "risk_factors": "={{ $json.risk_factors }}",
+            "deal_probability": "={{ $json.deal_probability }}",
+            "potential_opportunities": "={{ $json.potential_opportunities }}",
+            "salesperson_performance": "={{ $json.salesperson_performance }}",
+            "next_steps_recommendations": "={{ $json.next_steps }}",
+            "red_flags": "={{ $json.output.red_flags }}",
+            "buying_triggers": "={{ $json.output.buying_triggers }}",
+            "follow_up_email_subject": "={{ $json.output.follow_up_email.subject }}",
+            "follow_up_email_body": "={{ $json.output.follow_up_email.body }}"
+          },
+          "matchingColumns": [
+            "person"
+          ],
+          "schema": [
+            {
+              "id": "person",
+              "displayName": "person",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mom_objective_of_call",
+              "displayName": "mom_objective_of_call",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mom_key_discussion_points",
+              "displayName": "mom_key_discussion_points",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mom_decisions_taken",
+              "displayName": "mom_decisions_taken",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mom_action_items",
+              "displayName": "mom_action_items",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mom_next_steps_timeline",
+              "displayName": "mom_next_steps_timeline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "red_flags",
+              "displayName": "red_flags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "potential_opportunities",
+              "displayName": "potential_opportunities",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "qualification_score",
+              "displayName": "qualification_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "deal_probability",
+              "displayName": "deal_probability",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "risk_factors",
+              "displayName": "risk_factors",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "buying_triggers",
+              "displayName": "buying_triggers",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "salesperson_performance",
+              "displayName": "salesperson_performance",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "next_steps_recommendations",
+              "displayName": "next_steps_recommendations",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "follow_up_email_subject",
+              "displayName": "follow_up_email_subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "follow_up_email_body",
+              "displayName": "follow_up_email_body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1552,
+        112
+      ],
+      "id": "8f9adf24-ff1a-4566-81ed-f7db4b59bd24",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "bmH9FaVAWf2DQWto",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        672,
+        16
+      ],
+      "id": "9f847b33-ec02-4a00-bd07-167fdc930c80",
+      "name": "OpenAI Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "d6Mh1zH3ugIIaVe5",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "78fb9da6-93ab-49b0-bf4e-361f73a53cde",
+              "name": "name and email",
+              "value": "={{ $json.output[0].content[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1072,
+        16
+      ],
+      "id": "83eb8bd1-f785-4e4d-b9b2-76864c29d314",
+      "name": "Client Details"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e6774683-eaea-47de-ab0e-52bae6b8a9e8",
+              "name": "company_name",
+              "value": "={{ $json.output.person.company_name }}",
+              "type": "string"
+            },
+            {
+              "id": "d6953cf1-75f3-45b2-943c-c9506c18f63f",
+              "name": "industry",
+              "value": "={{ $json.output.person.industry }}",
+              "type": "string"
+            },
+            {
+              "id": "4b7a5d59-71e4-4915-bf41-5d7bb5a9898b",
+              "name": "goals",
+              "value": "={{ $json.output.person.goals }}",
+              "type": "array"
+            },
+            {
+              "id": "1682430d-2e2f-4a17-9982-c37d6c0e8517",
+              "name": "pain_points",
+              "value": "={{ $json.output.person.pain_points }}",
+              "type": "array"
+            },
+            {
+              "id": "188982c0-3855-40c8-bc0e-3f87c95a2f2d",
+              "name": "mom",
+              "value": "={{ $json.output.mom }}",
+              "type": "object"
+            },
+            {
+              "id": "7ff0b5a4-5308-4383-9c15-53510ccf513f",
+              "name": "potential_opportunities",
+              "value": "={{ $json.output.potential_opportunities }}",
+              "type": "array"
+            },
+            {
+              "id": "d522c3c2-c16d-4249-94c2-8c86f05187e0",
+              "name": "deal_probability",
+              "value": "={{ $json.output.deal_probability }}",
+              "type": "object"
+            },
+            {
+              "id": "87af7ab6-3452-4f7d-a3e4-783d671aff08",
+              "name": "risk_factors",
+              "value": "={{ $json.output.risk_factors }}",
+              "type": "array"
+            },
+            {
+              "id": "07116fa2-3d9e-4282-adae-2f61eb2802cf",
+              "name": "salesperson_performance",
+              "value": "={{ $json.output.salesperson_performance }}",
+              "type": "object"
+            },
+            {
+              "id": "99465a97-966f-470e-9e90-6bbd626b6a88",
+              "name": "next_steps",
+              "value": "={{ $json.output.next_steps }}",
+              "type": "array"
+            },
+            {
+              "id": "30f99ede-7405-4f8b-8e02-32fde3a6db5e",
+              "name": "output.buying_triggers",
+              "value": "={{ $json.output.buying_triggers }}",
+              "type": "array"
+            },
+            {
+              "id": "55de1bcb-f4cd-403b-898d-4cb6d4eb9791",
+              "name": "output.red_flags",
+              "value": "={{ $json.output.red_flags }}",
+              "type": "array"
+            },
+            {
+              "id": "00846f52-4b23-4996-907c-b72c4ec292cc",
+              "name": "output.follow_up_email",
+              "value": "={{ $json.output.follow_up_email }}",
+              "type": "object"
+            },
+            {
+              "id": "2a4bf484-76cc-4a6b-b320-f44f5bf385f9",
+              "name": "output.qualification_score",
+              "value": "={{ $json.output.qualification_score }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1072,
+        240
+      ],
+      "id": "af41331f-daf5-43ee-96a7-8ccfb9cfaac9",
+      "name": "Meeting Details"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        368,
+        16
+      ],
+      "id": "26103ad7-8655-4dbb-bd31-861008768c45",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "d6Mh1zH3ugIIaVe5",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Meeting Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Message a model": {
+      "main": [
+        [
+          {
+            "node": "Client Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Client Details": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meeting Details": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Message a model",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "27ced834-503c-40bf-b7b8-2ce0b519d2de",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d926fbed8e2124661dc1f57a566af79282cb04865f500724519bfd2f0f89925e"
+  },
+  "id": "P8hZRiiEEBNQxuRf",
+  "tags": []
+}
